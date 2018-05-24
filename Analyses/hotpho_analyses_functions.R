@@ -288,8 +288,8 @@ cptac_site_f = "/Users/khuang/Box\ Sync/Ding_Lab/Projects_Current/hotpho_data/in
 cptac_site = read.table(header=T, quote = "", sep="\t", stringsAsFactors = F, fill =T, file = cptac_site_f)
 
 # hotspot3d cluster file
-cluster_f = "HotSpot3D/Data_201803/PTM_MC3_noFs.maf.3D_Proximity.pairwise.3D_Proximity.sites.3D_Proximity.musites.site.l0.ad10.r10.cleaned.clusters" # load the ref corrected cluster file
-cluster = read.table(header=T, quote = "", sep="\t", stringsAsFactors = F, fill =T, file = cluster_f, colClasses=c(rep('character',5),rep("numeric",4),rep("character",6)))
-pass_cluster_f = "output/Data_201803_cc.p0.05.cluster.tsv"
-annotated_cluster = read.table(header=T, quote = "", sep="\t", stringsAsFactors = F, fill =T, file = pass_cluster_f, colClasses=c('character','numeric',rep('character',3),rep("numeric",4),rep("character",6),rep("numeric",3),"character"))
+cluster_f = "/Users/khuang/Box\ Sync/Ding_Lab/Projects_Current/hotpho_data/HotSpot3D/Data_201805/MC3.maf.3D_Proximity.pairwise.3D_Proximity_cleaned.sites.3D_Proximity_cleaned.musites.site.l0.ad10.r10.clusters" # load the ref corrected cluster file
+cluster = read.table(header=T, quote = "", sep="\t", stringsAsFactors = F, file = cluster_f, colClasses=c(rep('character',3),rep("numeric",4),rep("character",7)))
+pass_cluster_f = "output/Data_201805_cc.p0.05.cluster.tsv"
+annotated_cluster = read.table(header=T, quote = "", sep="\t", stringsAsFactors = F, fill =T, file = pass_cluster_f, colClasses=c(rep('character',3),rep("numeric",4),rep("character",7),rep("numeric",4),"character"))
 annotated_cluster_h = annotated_cluster[annotated_cluster$Type=="Hybrid",]

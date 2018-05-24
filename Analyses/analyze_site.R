@@ -36,7 +36,7 @@ phosphosites_map = rbind(cptac_site_map,PTMcosmo_map)
 phosphosites_map = phosphosites_map[!duplicated(paste(phosphosites_map$Transcript,phosphosites_map$Position)),]
 
 # mapped mutation and phosphosites
-site_f = "/Users/khuang/Box\ Sync/Ding_Lab/Projects_Current/hotpho_data/HotSpot3D/Data_201803/3D_Proximity.musites.gz"
+site_f = "/Users/khuang/Box\ Sync/Ding_Lab/Projects_Current/hotpho_data/HotSpot3D/Data_201805/3D_Proximity.musites.gz"
 site = read.table(header=T, quote = "", sep="\t", stringsAsFactors = F, fill =T, file = gzfile(site_f))
 site_uniq = site[!duplicated(paste(site$Gene1,site$Mutation1,site$Transcript2,site$TranscriptPosition2)),]
 
@@ -77,7 +77,7 @@ p = ggplot(background_rate,aes(x = Var2, y=Freq, fill=Var1))
 p = p + geom_bar(stat = "identity") + labs(x = "", y = "Count of phosphosites")
 p = p + theme_bw() + theme(legend.position = "bottom")
 p
-fn = paste("output/Data_201803_mapped_sites_by_residue.pdf",sep="_")
+fn = paste("output/Data_201805_mapped_sites_by_residue.pdf",sep="_")
 ggsave(fn, w=1,h=4,useDingbat=F)
 
 # compare rate of STY to background rate of STY "other" residues
@@ -91,7 +91,7 @@ p = ggplot(clustered_rate,aes(x = Var2, y=Freq, fill=Var1))
 p = p + geom_bar(stat = "identity") + labs(x = "", y = "Count of phosphosites")
 p = p + theme_bw() + theme(legend.position = "bottom")
 p
-fn = paste("output/Data_201803_coclustered_sites_by_residue.pdf",sep="_")
+fn = paste("output/Data_201805_coclustered_sites_by_residue.pdf",sep="_")
 ggsave(fn, w=1,h=4,useDingbat=F)
 
 cat("Enrichment for T:\n")
@@ -131,7 +131,7 @@ p = ggplot(all_by_gene_m[all_by_gene_m$Gene %in% top_rate,],aes(x = Gene, y= val
 p = p + geom_bar(stat = "identity") + labs(x = "", y = "Count of phosphosites") + coord_flip()
 p = p + theme_bw() + theme(legend.position = "bottom")
 p
-fn = paste("output/Data_201803_coclustered_sites_by_gene_ratio.pdf",sep="_")
+fn = paste("output/Data_201805_coclustered_sites_by_gene_ratio.pdf",sep="_")
 ggsave(fn, w=5,h=5,useDingbat=F)
 
 tn = "output/coclustered_phosphosite_by_gene_ratio.txt"
@@ -221,10 +221,10 @@ top_genes_cluster = names(rank_vectors(annotated_clusterMUT_h$Gene_Drug[annotate
 # top_genes_cluster = names(rank_vectors(mc3_score$gene[mc3_score$Type == "Clustered"],n=10))
 # top_genes_proxi = names(rank_vectors(mc3_score$gene[mc3_score$Type == "Proximal"],n=10))
 # top_genes_direct = names(rank_vectors(mc3_score$gene[mc3_score$Type =="Direct"],n=3))
-top_genes = c(top_genes_cluster,top_genes_proxi,top_genes_direct)
+# top_genes = c(top_genes_cluster,top_genes_proxi,top_genes_direct)
 gene_dist = data.frame(table(annotated_clusterMUT_h$SiteType,annotated_clusterMUT_h$Gene_Drug))
 colnames(gene_dist) = c("Type","Gene","Count")
-gene_dist_g = gene_dist[gene_dist$Gene %in% top_genes,]
+gene_dist_g = gene_dist[gene_dist$Gene %in% top_genes_cluster,]
 gene_dist_g$Count_plot = gene_dist_g$Count
 gene_dist_g$Count_plot[gene_dist_g$Count_plot>50] = 50
 getPalette = colorRampPalette(c("#FFFFFF","#fed976","#e31a1c"))

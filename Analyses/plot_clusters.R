@@ -28,7 +28,7 @@ p = p + geom_text_repel(aes(label=ifelse((Var2=="Hybrid" & Freq > 2) | (Var2=="M
 p = p + theme_bw()+ scale_size_continuous(range = c(0,4))
 p = p + labs(x="Cluster type", y = "Number of clusters")
 p
-fn = paste("output/Data_201803_p0.05_cluster_count_by_type_gene.pdf",sep="_")
+fn = paste("output/Data_201805_p0.05_cluster_count_by_type_gene.pdf",sep="_")
 ggsave(fn, w=5,h=5,useDingbat=F)
 
 # examine gene distribution
@@ -41,14 +41,14 @@ annotated_cluster_centroids_unique_g$Gene_Drug= factor(annotated_cluster_centroi
 annotated_cluster_centroids_unique_g$Type= factor(annotated_cluster_centroids_unique_g$Type,levels=c("Site_Only","Mut_Only","Hybrid"  ))
 
 # plot_barplot(annotated_cluster_centroids_unique_g, x_string = "Gene_Drug", fill_string = "Type",
-#              fileName = "Data_201803_cc.p0.05_gene_counts.pdf")
+#              fileName = "Data_201805_cc.p0.05_gene_counts.pdf")
 p = ggplot(annotated_cluster_centroids_unique_g,aes(x = Gene_Drug, fill=Type))
 p = p + geom_bar()
 p = p + theme_bw() + coord_flip()
 p = p + labs(x="Gene", y = "Count of clusters")
 p = p + theme(axis.title = element_text(size=12), axis.text.x = element_text(colour="black", size=10, angle = 90, vjust=0.5), axis.text.y = element_text(colour="black", size=12))#element_text(colour="black", size=14))
 p
-fn = paste("output/Data_201803_cc.p0.05_gene_counts.pdf",sep="_")
+fn = paste("output/Data_201805_cc.p0.05_gene_counts.pdf",sep="_")
 ggsave(fn, w=5,h=5,useDingbat=F)
 
 gene_type_count = data.frame(table(annotated_cluster_centroids_unique_g$Type,annotated_cluster_centroids_unique_g$Gene_Drug))
@@ -59,7 +59,7 @@ p = p + geom_point(aes(size=Freq))
 p = p + theme_bw()+ scale_size_continuous(range = c(0,4))
 p = p + labs(x="Cluster type", y = "Gene")
 p
-fn = paste("output/Data_201803_cc.p0.05_dist_by_cluster_type_bubble.pdf",sep="_")
+fn = paste("output/Data_201805_cc.p0.05_dist_by_cluster_type_bubble.pdf",sep="_")
 ggsave(fn, w=5,h=5,useDingbat=F)
 
 p = ggplot(annotated_cluster_centroids_unique_g,aes(x = Mut_count, y = Site_count, color=Type))
@@ -70,7 +70,7 @@ p = p + theme_bw()  + ylim(0,7) + xlim(0,13)
 p = p + labs(x="Number of mutations", y = "Number of phosphosites")
 #p = p + coord_equal()
 p
-fn = paste("output/Data_201803_cc.p0.05_hybrid_cluster_siteCounts.pdf",sep="_")
+fn = paste("output/Data_201805_cc.p0.05_hybrid_cluster_siteCounts.pdf",sep="_")
 ggsave(fn, w=6,h=5,useDingbat=F)
 
 annotated_cluster_centroids_unique_g$Gene_Drug= factor(annotated_cluster_centroids_unique_g$Gene_Drug,levels=names(gene_counts))
@@ -93,7 +93,7 @@ p = p + geom_bar() + coord_flip() + labs(x = "Gene", y = "Count of co-clustered 
 p = p + theme_bw() #+ scale_y_log10() 
 #p = p + geom_vline(xintercept = 1,alpha=0.5)
 p
-fn = paste("output/Data_201803_cc_filtered_clus_by_residueType_byGene.pdf",sep="_")
+fn = paste("output/Data_201805_cc_filtered_clus_by_residueType_byGene.pdf",sep="_")
 ggsave(fn, w=5,h=5,useDingbat=F)
 
 p = ggplot(annotated_clusterPTM_dis,aes(x = Var1, y = Freq, fill=Var2))
@@ -102,7 +102,7 @@ p = p + geom_bar(stat="identity")
 p = p + theme_bw() #+ scale_y_log10()
 #p = p + geom_vline(xintercept = 1,alpha=0.5)
 p
-fn = paste("output/Data_201803_cc_filtered_clus_by_residueType.pdf",sep="_")
+fn = paste("output/Data_201805_cc_filtered_clus_by_residueType.pdf",sep="_")
 ggsave(fn, w=5,h=5,useDingbat=F)
 
 annotated_clusterPTM_dis_h = annotated_clusterPTM_dis[annotated_clusterPTM_dis$Var2=="Hybrid",]
@@ -116,7 +116,7 @@ p = p + geom_bar(stat="identity")
 p = p + theme_bw() #+ scale_y_log10()
 #p = p + geom_vline(xintercept = 1,alpha=0.5)
 p
-fn = paste("output/Data_201803_cc_clus_by_residueType.pdf",sep="_")
+fn = paste("output/Data_201805_cc_clus_by_residueType.pdf",sep="_")
 ggsave(fn, w=5,h=5,useDingbat=F)
 
 ### centroid size plot ###
