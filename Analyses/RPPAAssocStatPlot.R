@@ -10,8 +10,8 @@ source("Analyses/hotpho_analyses_functions.R")
 
 #FUNCTION myglm#
 myglm=function(z,trait,variant,covar=NA,ytype) {
-  if (is.na(covar) | is.null(covar) | nchar(covar)==0  ) { 
-    model=formula(paste(trait,"~",variant)) 
+  if (is.na(covar) | is.null(covar) | nchar(covar)==0  ) {
+    model=formula(paste(trait,"~",variant))
   } else {
     model=formula(paste(trait,"~",variant,"+",covar))
   }
@@ -24,7 +24,7 @@ myglm=function(z,trait,variant,covar=NA,ytype) {
 #FUNCTION plot_violin#
 ### plot quantitative y in relationship to x
 ### faceted by covariate covi
-plot_violin = function(y,yi,xi,covi){ 
+plot_violin = function(y,yi,xi,covi){
   # change height based on the number of markers
   dat = y[,c(yi, xi, covi)]
   dat[,1] = as.numeric(dat[,1])
@@ -33,11 +33,11 @@ plot_violin = function(y,yi,xi,covi){
   n_facet = length(unique(dat[,covi]))
   p = ggplot(data=dat)
   p = p + facet_grid(as.formula(paste(". ~", covi)))
-  p = p + geom_violin(aes_string(x=xi, y=yi, fill=xi),alpha=0.5) + guides(fill=FALSE, color =FALSE) 
-  p = p + geom_jitter(aes_string(x=xi, y=yi, color=xi), alpha = 0.2) #+ geom_point(aes(x=Status, y=value)) 
-  p = p + guides(fill=FALSE, color =FALSE) 
+  p = p + geom_violin(aes_string(x=xi, y=yi, fill=xi),alpha=0.5) + guides(fill=FALSE, color =FALSE)
+  p = p + geom_jitter(aes_string(x=xi, y=yi, color=xi), alpha = 0.2) #+ geom_point(aes(x=Status, y=value))
+  p = p + guides(fill=FALSE, color =FALSE)
   p = p + labs(x = paste(xi,"pathVarPline Variant"), y = yi) + theme_bw()
-  p = p + theme(text = element_text(colour="black", size=16), axis.text.x = element_text(colour="black", size=14), 
+  p = p + theme(text = element_text(colour="black", size=16), axis.text.x = element_text(colour="black", size=14),
                 axis.text.y = element_text(colour="black", size=14), strip.text = element_text(size = 8, angle = 90))
   p
   fn = paste(pd, yi, "by", xi, "cross", covi, "violin.pdf", sep="_")
@@ -45,59 +45,61 @@ plot_violin = function(y,yi,xi,covi){
 }
 
 run_glm = function(data=NULL, covi="") {
-  
+
   ### data input #####
   data_g = data#[, c("age_at_initial_pathologic_diagnosis","type",gene)]
-  
+
   ######### analysis ##########
   row_stat=NULL
-  
+
   # analysis_type   clinical_data_trait_name    variant/gene_name   covariates  memo
   ytype="Q";yi="expression";xi="Clustered";covi=covi;#covi=md[i,4];memo=md[i,5]
   # DEBUG
   #cat(paste("    Processing: yi =", yi, " xi =", xi, " covi =", covi, "\n") )
-  
+
   if (ytype=="Q") {
     test = "F"
   } else if (ytype=="B") {
     test = "Chisq"
   } else {
-    stop("Unknown model ytype ", ytype) 
+    stop("Unknown model ytype ", ytype)
   }
-  
+
   glm = try(myglm(data_g,yi,xi,covi,ytype))  # MAW new
   if(class(glm)[1] == "try-error") {
     cat(paste("    Error caught, continuing.  yi =", yi, " xi =", xi, " covi =", covi, "\n") )
     next
   }
   try(anova(glm,test=test))->fit
-  
+
 #   if (xi %in% names(coefficients(glm))){
 #     coeff = coefficients(glm)[[xi]]
   if (length(names(coefficients(glm)))>1){
     coeff = coefficients(glm)[[2]]
   } else {coeff = NA}
-  
+
   if (class(fit)[1]!="try-error")
   {
     fit=as.matrix(fit)
     if (xi %in% rownames(fit)) (row_stat = cbind(yi,ytype,xi,as.data.frame(t(fit[xi,])),coeff,covi))
   }
   return(row_stat)
-  
+
 }
 
-### MAIN ###
+##### MAIN #####
 
-## read input files
-## phopshosites
-site_f = "/Users/khuang/Box\ Sync/Ding_Lab/Projects_Current/hotpho_data/HotSpot3D/Data_201805/3D_Proximity.musites.gz"
-site = read.table(header=T, quote = "", sep="\t", stringsAsFactors = F, fill =T, file = gzfile(site_f))
-site_uniq = site[!duplicated(paste(site$Gene1,site$Mutation1,site$Transcript2,site$TranscriptPosition2)),]
-
-phosphosites = site[,c("Gene2","Site2")]
-phosphosites = phosphosites[!duplicated(paste(phosphosites$Gene2,phosphosites$Site2)),]
-phosphosites$Position = as.numeric(gsub("p.[A-Z](.*)","\\1",phosphosites$Site2))
+### read input files ###
+# ## phopshosites
+# site_f = "/Users/khuang/Box\ Sync/Ding_Lab/Projects_Current/hotpho_data/HotSpot3D/Data_201805/3D_Proximity_cleaned.musites.gz"
+# site = read.table(header=T, quote = "", sep="\t", stringsAsFactors = F, fill =T, file = gzfile(site_f))
+# site_uniq = site[!duplicated(paste(site$Gene1,site$Mutation1,site$Transcript2,site$TranscriptPosition2)),]
+#
+# phosphosites = site[,c("Transcript","Site2")]
+# phosphosites = phosphosites[!duplicated(paste(phosphosites$Transcript,phosphosites$Site2)),]
+# phosphosites$Position = as.numeric(gsub("p.[A-Z](.*)","\\1",phosphosites$Site2))
+annotated_clusterPTM_h = annotated_cluster_h[annotated_cluster_h$Alternate=="ptm",]
+annotated_clusterPTM_h$Position = as.numeric(annotated_clusterPTM_h$Position)
 
 ## somatic mutations
 somatic_f = "/Users/khuang/Box\ Sync/PhD/germline/PanCanAtlasGermline/TCGA_data/somatic/mc3.v0.2.8.PUBLIC.maf.gene_vclass_HGVSp_sample.gz"
@@ -110,12 +112,12 @@ somatic = somatic[somatic$HUGO_Symbol %in% annotated_cluster$Gene_Drug,]
 
 somatic$Position = as.numeric(gsub("p.[A-Z](.*)[A-Z]","\\1",somatic$Somatic_HGVSp))
 somatic$Type = "None"
-somatic$Type[paste(somatic$HUGO_Symbol,somatic$Somatic_HGVSp) %in% paste(annotated_cluster$Gene_Drug,annotated_cluster$Mutation_Gene)] = "Clustered"
-somatic$Type[paste(somatic$HUGO_Symbol,somatic$Position) %in% paste(phosphosites$Gene2,phosphosites$Position-1)] = "Proximal"
-somatic$Type[paste(somatic$HUGO_Symbol,somatic$Position) %in% paste(phosphosites$Gene2,phosphosites$Position-2)] = "Proximal"
-somatic$Type[paste(somatic$HUGO_Symbol,somatic$Position) %in% paste(phosphosites$Gene2,phosphosites$Position+1)] = "Proximal"
-somatic$Type[paste(somatic$HUGO_Symbol,somatic$Position) %in% paste(phosphosites$Gene2,phosphosites$Position+2)] = "Proximal"
-somatic$Type[paste(somatic$HUGO_Symbol,somatic$Position) %in% paste(phosphosites$Gene2,phosphosites$Position)] = "Direct"
+somatic$Type[paste(somatic$HUGO_Symbol,somatic$Somatic_HGVSp) %in% paste(annotated_cluster_h$Gene_Drug,annotated_cluster_h$Mutation_Gene)] = "Clustered"
+somatic$Type[paste(somatic$HUGO_Symbol,somatic$Position) %in% paste(annotated_clusterPTM_h$Gene_Drug,annotated_clusterPTM_h$Position-1)] = "Proximal"
+somatic$Type[paste(somatic$HUGO_Symbol,somatic$Position) %in% paste(annotated_clusterPTM_h$Gene_Drug,annotated_clusterPTM_h$Position-2)] = "Proximal"
+somatic$Type[paste(somatic$HUGO_Symbol,somatic$Position) %in% paste(annotated_clusterPTM_h$Gene_Drug,annotated_clusterPTM_h$Position+1)] = "Proximal"
+somatic$Type[paste(somatic$HUGO_Symbol,somatic$Position) %in% paste(annotated_clusterPTM_h$Gene_Drug,annotated_clusterPTM_h$Position+2)] = "Proximal"
+somatic$Type[paste(somatic$HUGO_Symbol,somatic$Position) %in% paste(annotated_clusterPTM_h$Gene_Drug,annotated_clusterPTM_h$Position)] = "Direct"
 
 ## RPPA (processed data from germline project)
 RPPA = read.table("/Users/khuang/Box Sync/PhD/germline/PanCanAtlasGermline/analysis/RPPA_effect/out/pancan_RPPA_quantile_all.tsv",header=T, stringsAsFactors = F, quote = "", sep = "\t")
@@ -132,7 +134,7 @@ RPPA_g_m$expression = as.numeric(RPPA_g_m$expression)
 cancers = unique(RPPA_g_m$cancer)
 cancers = cancers[-which(cancers %in% c("COADREAD","GBMLGG","STES","KIPAN"))]
 markers = unique(RPPA_g_m$marker)
-# limit runs to cancers with at least 3 likely patho/pathogenic variants 
+# limit runs to cancers with at least 3 likely patho/pathogenic variants
 tt = NULL
 for (marker in markers){
   RPPA_g_m_g = RPPA_g_m[RPPA_g_m$marker==marker,]
@@ -141,6 +143,7 @@ for (marker in markers){
   var_exp_g = merge(RPPA_g_m_g,gene_sample_g,by="bcr_patient_barcode",all.x=T)
   var_exp_g$Clustered = 0
   var_exp_g$Clustered[!is.na(var_exp_g$Type) & var_exp_g$Type=="Clustered"] = 1
+  var_exp_g$Clustered[!is.na(var_exp_g$Type) & var_exp_g$Type!="Clustered"] = NA
   for (cancer in cancers){
     var_exp_g_c = var_exp_g[var_exp_g$cancer %in% cancer,]
     gene_path_count = sum(var_exp_g_c$Clustered)
@@ -160,13 +163,17 @@ for (marker in markers){
 #"yi","ytype","xi","Df","Deviance","Resid. Df","Resid. Dev","F","Pr(>F)","covi","memo"
 colnames(tt) = c("cancer","marker","gene","gene_path_count","wilcoxP","W_stat","y","y_type","Gene","degrees_freedom","deviance","residual_degrees_freedom","residual_deviance",
                  "F_statistic","p-value","coefficient","covariants");
-tt$FDR = p.adjust(tt[,"p-value"], method="fdr") # MAW new, calculates FDR based on the method from,
-# Benjamini, Y., and Hochberg, Y. (1995). Controlling the false discovery rate: a practical and powerful approach to multiple testing. Journal of the Royal Statistical Society Series B 57, 289–300.
+tt$FDR = p.adjust(tt[,"p-value"], method="fdr") 
 tt$wilcoxFDR = p.adjust(tt[,"wilcoxP"], method="fdr")
 
 tt=tt[order(tt$FDR, decreasing=FALSE),]
 tn = "output/clusterMutRPPAAssoc.txt"
 write.table(tt, quote=F, sep="\t", file = tn, row.names = F)
+
+cat("Significant associations","\n")
+table(tt$FDR < 0.05)
+table(tt$gene[tt$FDR < 0.05])
+table(tt$marker[tt$FDR < 0.05])
 
 ### plotting ###
 tt$gene = as.character(tt$gene)
@@ -204,10 +211,30 @@ p
 fn = 'output/RPPAAssocVolcanoWCOX.pdf'
 ggsave(fn,w = 6, h = 5, useDingbat=F)
 
+# using the Wilcox test result: plot by gene
+tt$association = "None"
+tt$association[tt$FDR<0.15] = "Suggestive"
+tt$association[tt$FDR<0.05] = "Significant"
+sele_c = unique(tt$cancer[tt$association=="Significant"])
+tt_c = tt[tt$cancer %in% sele_c,]
+tt_c$cancer = factor(tt_c$cancer, levels = unique(tt_c$cancer)[order(character(unique(tt_c$cancer)))])
+p = ggplot(data=tt_c,aes(x=coefficient,y=cancer,color = cancer))
+# p = p + geom_point(aes(y=-log10(wilcoxFDR),x= coefficient,color = cancer),alpha=0.5)
+p = p + geom_point(aes(shape=association),alpha=0.3,size=2)
+p = p + geom_text_repel(aes(label=ifelse(FDR<0.05 & coefficient>0,marker,NA)))
+p = p + getPCACancerColor()
+p = p + labs(x="Coefficient",y= "-log10(FDR)")
+p = p + geom_vline(xintercept = 0, alpha=0.5) + xlim(-1.7,1.7)
+p = p  + theme_bw() +
+  theme(axis.text.x = element_text(colour="black", size=12), axis.text.y = element_text(colour="black", size=12),axis.ticks = element_blank())#element_text(colour="black", size=14))
+p
+fn = 'output/rppaExpressAssocByGeneByCancer.pdf'
+ggsave(fn,w = 6, h = 5, useDingbat=F)
+
 colnames(RPPA_g)[9] = "HUGO_Symbol"
 RPPA_g_mut = merge(RPPA_g,somatic,by=c("HUGO_Symbol","bcr_patient_barcode"))
 featMarkers = tt$marker[tt$FDR< 0.05]
-featMarkers = featMarkers[which(featMarkers!="B-Raf" & featMarkers!="VHL")]
+featMarkers = featMarkers[which(featMarkers!="Caspase-8" & featMarkers!="VHL")]
 RPPA_g_mut_fg = RPPA_g_mut[gsub(".*\\|","",RPPA_g_mut$marker) %in% featMarkers,]
 RPPA_g_mut_fg$Type = factor(RPPA_g_mut_fg$Type,levels = c("None","Clustered","Proximal","Direct"))
 RPPA_g_mut_fg$marker2 = gsub(".*\\|","",RPPA_g_mut_fg$marker)
@@ -221,15 +248,15 @@ for ( marker in tt$marker[tt$FDR<0.05]){
   p = p + geom_dotplot(dotsize=1.2,binwidth=.01, binaxis= "y",colour=NA,stackdir ="centerwhole",alpha=0.5)
   p = p + geom_violin(alpha=0.6)
   #p = p + geom_jitter(alpha = 0.2,height = 0)
-  p = p + stat_summary(fun.y = mean, fun.ymin = mean, fun.ymax = mean, geom = "crossbar", width = 0.8)
-  p = p + geom_text_repel(aes(color=Type, label=ifelse(Type=="Clustered" & quantile > 0.95 & HUGO_Symbol != "TP53",as.character(Somatic_HGVSp),NA)), alpha = 0.7)
+  p = p + stat_summary(fun.y = median, fun.ymin = median, fun.ymax = median, geom = "crossbar", width = 0.8)
+  p = p + geom_text_repel(size=2,aes(color=Type, label=ifelse(Type=="Clustered" & quantile > 0.97 & HUGO_Symbol != "TP53",as.character(Somatic_HGVSp),NA)), alpha = 0.7)
   p = p + theme_bw() 
-  p = p + getTypeFillScale() + getTypeColorScale()
+  p = p + getTypeFillScale() + getTypeColorScale() 
   p = p + ylab("RPPA Expression Percentile within the Cancer Type") + xlab("Interaction of Mutation with Phosphosites")
-  p = p + scale_y_continuous(breaks = seq(0,1, by= 0.25))
-  #p = p + getVarColorScale()
+  p = p + scale_y_continuous(breaks = seq(0,1, by= 0.25)) + ylim(0,1)
+  #p = p + getVarColorScale() 
   p = p + theme(axis.title = element_text(size=12), axis.text.x = element_text(colour="black", size=10, angle = 90, vjust=0.5), axis.text.y = element_text(colour="black", size=12))
-  p
+  p + ggtitle(marker) + geom_hline(yintercept =0.5, alpha=0.3)
   fn = paste("output/clusteredMutRPPAExpression_byGene",marker,"pdf",sep=".")
   ggsave(file=fn, useDingbats=FALSE)
 }
@@ -255,3 +282,5 @@ RPPA_g_mut_fg_smut = RPPA_g_mut_fg[RPPA_g_mut_fg$Type!="None" & RPPA_g_mut_fg$qu
 RPPA_g_mut_fg_smut = RPPA_g_mut_fg_smut[order(RPPA_g_mut_fg_smut$quantile, decreasing = T),]
 tn = "output/clusterMutHighRPPA.txt"
 write.table(RPPA_g_mut_fg_smut, quote=F, sep="\t", file = tn, row.names = F)
+
+

@@ -288,8 +288,9 @@ cptac_site_f = "/Users/khuang/Box\ Sync/Ding_Lab/Projects_Current/hotpho_data/in
 cptac_site = read.table(header=T, quote = "", sep="\t", stringsAsFactors = F, fill =T, file = cptac_site_f)
 
 # hotspot3d cluster file
-cluster_f = "/Users/khuang/Box\ Sync/Ding_Lab/Projects_Current/hotpho_data/HotSpot3D/Data_201805/MC3.maf.3D_Proximity.pairwise.3D_Proximity_cleaned.sites.3D_Proximity_cleaned.musites.site.l0.ad10.r10.clusters" # load the ref corrected cluster file
+cluster_f = "/Users/khuang/Box\ Sync/Ding_Lab/Projects_Current/hotpho_data/HotSpot3D/Data_201807/MC3.maf.3D_Proximity.pairwise.3D_Proximity_cleaned.sites.3D_Proximity_cleaned.musites.recurrence.l0.ad10.r10.clusters" # load the ref corrected cluster file
 cluster = read.table(header=T, quote = "", sep="\t", stringsAsFactors = F, file = cluster_f, colClasses=c(rep('character',3),rep("numeric",4),rep("character",7)))
-pass_cluster_f = "output/Data_201805_cc.p0.05.cluster.tsv"
-annotated_cluster = read.table(header=T, quote = "", sep="\t", stringsAsFactors = F, fill =T, file = pass_cluster_f, colClasses=c(rep('character',3),rep("numeric",4),rep("character",7),rep("numeric",4),"character"))
-annotated_cluster_h = annotated_cluster[annotated_cluster$Type=="Hybrid",]
+pass_cluster_f = "output/Data_201807_cc.p0.05.cluster_transcriptSynced.tsv"
+annotated_cluster = read.table(header=T, quote = "", sep="\t", stringsAsFactors = F, fill =T, file = pass_cluster_f, colClasses=c(rep('character',5),rep("numeric",4),rep("character",6),rep("numeric",3),rep("character",2)))
+annotated_cluster_h = annotated_cluster[annotated_cluster$Type=="Hybrid",] # limit to only hybrid clusters
+# write.table(annotated_cluster_h, quote=F, sep="\t", file = "output/Data_201807_cc.p0.05.cluster_transcriptSynced_hybrid.tsv", row.names = F)

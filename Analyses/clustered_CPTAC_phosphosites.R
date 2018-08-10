@@ -22,7 +22,7 @@ colnames(BRCA_Pho) = gsub(".Log.Ratio","",colnames(BRCA_Pho))
 clustered_sites = read.table(stringsAsFactors = F,header=TRUE, sep="\t", file="output/clusteredCPTACsites.txt")
 BRCA_Pho$clustered = F
 BRCA_Pho$clustered[BRCA_Pho$Phosphosite %in% clustered_sites$Phosphosite] = T
-BRCA_Pho = BRCA_Pho[rowSums(!is.na(BRCA_Pho))>15,]
+BRCA_Pho = BRCA_Pho[rowSums(!is.na(BRCA_Pho))>9,]
 BRCA_Pho$SD = rowSds(data.matrix(BRCA_Pho[,c(2:109)]),na.rm = T)
 BRCA_Pho_g = BRCA_Pho[BRCA_Pho$Gene %in% clustered_sites$hgnc_symbol,]
 
@@ -38,7 +38,7 @@ fn = paste("output/sd_for_clustered_phosphosites.pdf",sep="_")
 ggsave(fn,useDingbat=F)
 
 BRCA_Pho_sites = BRCA_Pho[BRCA_Pho$Phosphosite %in% clustered_sites$Phosphosite,]
-BRCA_Pho_sites = BRCA_Pho_sites[rowSums(!is.na(BRCA_Pho_sites))>14,]
+BRCA_Pho_sites = BRCA_Pho_sites[rowSums(!is.na(BRCA_Pho_sites))>9,]
 BRCA_Pho_sites_m = melt(BRCA_Pho_sites, id.vars = c("Phosphosite","Peptide","Gene","Organism"))
 
 BRCA_Pho_sites_mut = merge(BRCA_Pho_sites_m,BRCA_mut_m,by=c("Gene","variable"))
@@ -97,3 +97,74 @@ par(lend = 1)
 # )
 
 dev.off()
+
+
+### do they affect transcription? ###
+histones = read.table("input/histones.tsv",header=F,sep="\t")
+histone_genes = histones[,1]
+### expression ###
+BRCA_rna = read.table(header=TRUE, sep="\t", file=paste(baseD,"pan3can_shared_data/BRCA/BRCA_mRNA_formatted_normalized.txt",sep=""))
+colnames(BRCA_rna)[1]= "Gene"
+row.names(BRCA_rna) = BRCA_rna$Gene
+BRCA_rna = BRCA_rna[,-which(colnames(BRCA_rna)=="Gene")]
+BRCA_rna_PCA = prcomp(t(BRCA_rna))
+BRCA_rna_PCA_data = data.frame(BRCA_rna_PCA$x)
+
+
+BRCA_Pho_sites_interest = BRCA_Pho_sites[,-c(which(colnames(BRCA_Pho_sites) %in% c("Peptide","Organism","clustered","SD")))]
+#histone_site = BRCA_Pho_sites_interest[BRCA_Pho_sites_interest$Gene %in% histone_genes,]
+BRCA_Pho_sites_interest_HI = t(BRCA_Pho_sites_interest[BRCA_Pho_sites_interest$Phosphosite=="NP_778224.1:s48",])
+BRCA_Pho_sites_interest_HI = t(BRCA_Pho_sites_interest[BRCA_Pho_sites_interest$Phosphosite=="NP_778224.1:y89",])
+colnames(BRCA_Pho_sites_interest_HI) = "phosphosite"
+
+BRCA_rna_pho = merge(BRCA_rna_PCA_data,BRCA_Pho_sites_interest_HI,by="row.names")
+row.names(BRCA_rna_pho) = BRCA_rna_pho[,1]
+BRCA_rna_pho = BRCA_rna_pho[,-which(colnames(BRCA_rna_pho)=="Row.names")]
+pam50 = t(brca_clin[1,])
+BRCA_rna_pho_pam50 = merge(BRCA_rna_pho,pam50,by="row.names")
+
+p = ggplot(data=BRCA_rna_pho_pam50,aes(x=PC1, y=PC2, color=as.numeric(phosphosite)))
+p = p + facet_grid(pam50~.)
+p = p + geom_point() #+ guides(fill=FALSE)
+p = p + theme_bw() + scale_color_gradientn(colors=RdBu1024,n=1000)
+p = p + theme(text = element_text(colour="black", size=16), axis.text.x = element_text(colour="black", size=14,angle=90,vjust=0.5),
+              axis.text.y = element_text(colour="black", size=14), strip.text = element_text(size = 8))
+p = p + labs(title = BRCA_Pho_sites_interest_HI[1,1])
+p
+fn = paste("output/expression_PCs_vs_histone_phosphosites_HIST4H4p.y89.pdf",sep=".")
+ggsave(file=fn, w=6, h=5, useDingbats=FALSE)
+
+# # no obvious findings
+# 
+# # germline
+# fn = "/Users/khuang/Box\ Sync/PhD/germline/PanCanAtlasGermline/TCGA_data/germline/PCA_pathVar_integrated_filtered_adjusted_wSomaticCounts.tsv"
+# pathVar = read.table(sep="\t",header=T, quote="",stringsAsFactors = F, file=fn)
+# pathVarP = pathVar[pathVar$Overall_Classification %in% c("Pathogenic","Likely Pathogenic"),]
+# pathVarPbrca = pathVarP$bcr_patient_barcode[pathVarP$HUGO_Symbol %in% c("BRCA1","BRCA2") & pathVarP$LOH_FDR < 0.05]
+# BRCA_rna_pho_pam50$brca = "WT"
+# BRCA_rna_pho_pam50$brca[paste("TCGA.",gsub(".01A","",BRCA_rna_pho_pam50$Row.names),sep="") %in% gsub("-",".",pathVarPbrca)] = "BRCA"
+# 
+# p = ggplot(data=BRCA_rna_pho_pam50,aes(x = brca, y=as.numeric(phosphosite)))
+# p = p + facet_grid(.~pam50)
+# p = p + geom_point() #+ guides(fill=FALSE)
+# p = p + theme_bw() + scale_color_gradientn(colors=RdBu1024,n=1000)
+# p = p + theme(text = element_text(colour="black", size=16), axis.text.x = element_text(colour="black", size=14,angle=90,vjust=0.5),
+#               axis.text.y = element_text(colour="black", size=14), strip.text = element_text(size = 8))
+# #p = p + theme(legend.position = "none")
+# p
+# # no obvious findings
+
+# BRCA_Pho_sites_interest_HI = t(BRCA_Pho_sites_interest[BRCA_Pho_sites_interest$Gene=="HIST4H4",])
+# colnames(BRCA_Pho_sites_interest_HI) = c("S48","Y89")
+# data = data.frame(BRCA_Pho_sites_interest_HI[-c(1,110),])
+# data$S48 = as.numeric(data$S48)
+# data$Y89 = as.numeric(data$Y89)
+# p = ggplot(data,aes(x = S48, y=Y89))
+# #p = p + facet_grid(.~pam50)
+# p = p + geom_point() #+ guides(fill=FALSE)
+# #p = p + theme_bw() + scale_color_gradientn(colors=RdBu1024,n=1000)
+# p = p + theme(text = element_text(colour="black", size=16), axis.text.x = element_text(colour="black", size=14,angle=90,vjust=0.5),
+#               axis.text.y = element_text(colour="black", size=14), strip.text = element_text(size = 8))
+# #p = p + theme(legend.position = "none")
+# p
+# # the two phosphosites on HIST4H4 are not well-correlated!

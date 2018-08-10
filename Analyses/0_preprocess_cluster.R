@@ -9,7 +9,7 @@ source("Analyses/hotpho_analyses_functions.R")
 ### common dependencies for plotting ###
 
 # hotspot3d cluster file
-cluster_f = "/Users/khuang/Box\ Sync/Ding_Lab/Projects_Current/hotpho_data/HotSpot3D/Data_201805/MC3.maf.3D_Proximity.pairwise.3D_Proximity_cleaned.sites.3D_Proximity_cleaned.musites.site.l0.ad10.r10.clusters"
+cluster_f = "/Users/khuang/Box\ Sync/Ding_Lab/Projects_Current/hotpho_data/HotSpot3D/Data_201807/MC3.maf.3D_Proximity.pairwise.3D_Proximity_cleaned.sites.3D_Proximity_cleaned.musites.recurrence.l0.ad10.r10.clusters"
 
 ##### CLUSTERs #####
 
@@ -22,7 +22,7 @@ cluster_summary = read.table(header=T, quote = "", sep="\t", stringsAsFactors = 
 # cluster$Alt_Mutation_Gene = gsub(".*:","",cluster$Alternative_Transcripts) # always get the last one as that seems to be the correct one; ex. ENST00000320868:p.T42|ENST00000320868:p.Y42
 # cluster$Original_Mutation_Gene = cluster$Mutation_Gene
 # cluster$Mutation_Gene[cluster$Alt_Mutation_Gene != ""] = cluster$Alt_Mutation_Gene[cluster$Alt_Mutation_Gene != ""]
-# #write.table(cluster, quote=F, sep="\t", file = "HotSpot3D/Data_201805/convertToRef.filtered.0705.pass.fast.MC3.combined.mumu.musite.sitesite.max20.ld0.ad10.r10.net.recur.unspec.strInd.subInd.noSingletons.clusters", row.names = F)
+# #write.table(cluster, quote=F, sep="\t", file = "HotSpot3D/Data_201807/convertToRef.filtered.0705.pass.fast.MC3.combined.mumu.musite.sitesite.max20.ld0.ad10.r10.net.recur.unspec.strInd.subInd.noSingletons.clusters", row.names = F)
 
 # some REF residues for sites seem to be off during generation of pairwise or cluster file
 # thankfully hotspot3d only considers position
@@ -46,7 +46,7 @@ table(cluster_merge$Mutation_Gene[cluster_merge$Alternate=="ptm"] != cluster_mer
 # cluster_merge$Mutation_Gene[cluster_merge$Alternate=="ptm"] = cluster_merge$originalLabel[cluster_merge$Alternate=="ptm"]
 # table(cluster_merge$Mutation_Gene[cluster_merge$Alternate=="ptm"] != cluster_merge$originalLabel[cluster_merge$Alternate=="ptm"])
 # cluster_merge = cluster_merge[,-c(which(colnames(cluster_merge) =="originalLabel"))]
-# write.table(cluster_merge, quote=F, sep="\t", file = "HotSpot3D/Data_201805/PTM_MC3_noFs.maf.3D_Proximity.pairwise.3D_Proximity.sites.3D_Proximity.musites.site.l0.ad10.r10.cleaned.clusters", row.names = F)
+# write.table(cluster_merge, quote=F, sep="\t", file = "HotSpot3D/Data_201807/PTM_MC3_noFs.maf.3D_Proximity.pairwise.3D_Proximity.sites.3D_Proximity.musites.site.l0.ad10.r10.cleaned.clusters", row.names = F)
 
 cat("Unique clusters (unfiltered):",length(unique(cluster$Cluster)),"\n")
 cat("Unique genes:",length(unique(cluster$Gene_Drug)),"\n")
@@ -109,7 +109,7 @@ p = p + geom_density(alpha=0.2,size=0.5)
 p = p + theme_bw() #+ xlim(0,5)
 p = p + geom_vline(xintercept = log10(h_thres),alpha=0.5)
 p
-fn = paste("output/Data_201805_cc_dist_by_cluster_type.pdf",sep="_")
+fn = paste("output/Data_201807_cc_dist_by_cluster_type.pdf",sep="_")
 ggsave(fn, useDingbat=F)
 
 cat("\n")
@@ -121,4 +121,48 @@ cat("Site-only clusters (filtered):",length(unique(annotated_cluster_centroids_u
 rank_vectors(annotated_cluster_centroids_unique_pass$Gene_Drug[annotated_cluster_centroids_unique_pass$Type=="Site_Only"])
 
 annotated_cluster_pass = annotated_cluster[annotated_cluster$Cluster %in% annotated_cluster_centroids_unique_pass$Cluster, ]
-write.table(annotated_cluster_pass, quote=F, sep="\t", file = "output/Data_201805_cc.p0.05.cluster.tsv", row.names = F)
+write.table(annotated_cluster_pass, quote=F, sep="\t", file = "output/Data_201807_cc.p0.05.cluster.tsv", row.names = F)
+
+# sync up transcripts within the same cluster; when the PTM sites are on a different transcript
+transvarIn_f = "HotSpot3D/Data_201807/PTM_Site_transvar.txt.gz"
+transvarIn = read.table(header=F, quote = "", sep="\t", stringsAsFactors = F, fill =T, file = gzfile(transvarIn_f))
+transvarIn_anno = transvarIn[,c(3,6,12)]
+colnames(transvarIn_anno) = c("Transcript","Position","GenomicPosition")
+# transvarIn_anno$Start = gsub("chr.*g.([0-9]*)_.*","\\1",transvarIn_anno$GenomicPosition)
+# transvarIn_anno$Stop = gsub("chr.*g.([0-9]*)_([0-9]*)/.*","\\2",transvarIn_anno$GenomicPosition)
+
+annotated_cluster_pass = merge(annotated_cluster_pass, transvarIn_anno, by=c("Transcript","Position"), all.x=T)
+annotated_cluster_pass$Start[annotated_cluster_pass$Alternate == "ptm"] = gsub("chr.*g.([0-9]*)_.*","\\1",annotated_cluster_pass$GenomicPosition[annotated_cluster_pass$Alternate == "ptm"])
+annotated_cluster_pass$Stop[annotated_cluster_pass$Alternate == "ptm"] = gsub("chr.*g.([0-9]*)_([0-9]*)/.*","\\2",annotated_cluster_pass$GenomicPosition[annotated_cluster_pass$Alternate == "ptm"])
+
+transvar_f = "/Users/khuang/Box\ Sync/Ding_Lab/Projects_Current/hotpho_data/output/annotated_cluster_h_PTM_transvarOut.txt"
+transvar = read.table(header=T, quote = "", sep="\t", stringsAsFactors = F, fill =T, file = transvar_f)
+transvar$Transcript = gsub(" .*","",transvar$transcript)
+transvar$Mutation_Gene = gsub(".*/(p.[A-Z][0-9]+)","\\1",transvar$coordinates.gDNA.cDNA.protein.)
+transvar_anno = transvar[grep("p.",transvar$Mutation_Gene),c("input","Transcript","Mutation_Gene")]
+transvar_anno$Start = gsub(".*:g.([0-9]+)_.*","\\1",transvar_anno$input)
+
+cluster = "10394.1"
+for (cluster in annotated_cluster_pass$Cluster){
+  annotated_cluster_pass_c = annotated_cluster_pass[annotated_cluster_pass$Cluster == cluster,]
+  if (annotated_cluster_pass_c$Type != "Site_Only"){
+    if (length(unique(annotated_cluster_pass_c$Transcript))>1){
+      mutTranscript = annotated_cluster_pass_c$Transcript[annotated_cluster_pass_c$Alternate!="ptm"][1]
+      PTMs = annotated_cluster_pass_c$Mutation_Gene[annotated_cluster_pass_c$Alternate=="ptm"]
+      for (PTM in PTMs){
+        if (annotated_cluster_pass_c$Transcript[annotated_cluster_pass_c$Mutation_Gene == PTM] != mutTranscript){
+          
+          updatedSite = gsub("(p.[A-Z][0-9]+).*","\\1",transvar_anno$Mutation_Gene[transvar_anno$Start == annotated_cluster_pass_c$Start[annotated_cluster_pass_c$Mutation_Gene == PTM] &
+                                                                                     transvar_anno$Transcript == mutTranscript])
+          if (length(updatedSite>0)){
+            annotated_cluster_pass$Transcript[annotated_cluster_pass$Cluster == cluster & annotated_cluster_pass$Mutation_Gene == PTM] = mutTranscript
+            annotated_cluster_pass$Mutation_Gene[annotated_cluster_pass$Cluster == cluster & annotated_cluster_pass$Mutation_Gene == PTM] = updatedSite
+          }
+        }
+      }
+    }
+  }
+}
+
+annotated_cluster_pass$Position = gsub("p.[A-Z]([0-9]+).*","\\1",annotated_cluster_pass$Mutation_Gene)
+write.table(annotated_cluster_pass, quote=F, sep="\t", file = "output/Data_201807_cc.p0.05.cluster_transcriptSynced.tsv", row.names = F)
