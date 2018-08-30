@@ -1,0 +1,10 @@
+#Using hotspot3d V1.8.2
+hotspot3d search --maf-file=/diskmnt/Projects/Users/dcui/hotPHO/MC3.maf --site-file=/diskmnt/Projects/Users/dcui/hotPHO/Transvar/results/PTMSiteFile.txt --prep-dir=/diskmnt/Datasets/HotSpot3D_Preprocess/ARDprep201712_GRCh38_91 --transcript-id-header=Transcript_ID --amino-acid-header=HGVSp_Short --3d-distance-cutoff 20 1> search.out 2> search.err
+
+hotspot3d cluster --pairwise-file=3D_Proximity.pairwise --sites-file=3D_Proximity.sites --musites-file 3D_Proximity.musites --maf-file=/diskmnt/Projects/Users/dcui/hotPHO/MC3.maf --site-file=/diskmnt/Projects/Users/dcui/hotPHO/Transvar/results/PTMSiteFile.txt --hup-file /diskmnt/Datasets/HotSpot3D_Preprocess/ARDprep201712/hugo.uniprot.pdb.csv --transcript-id-header=Transcript_ID --amino-acid-header=HGVSp_Short --3d-distance-cutoff=10 --vertex-type recurrence 1> cluster.out 2> cluster.err
+
+# clean pairwise files with sites (on Kuan's laptop)
+Rscript 0_clean_pairwise.R > 0_clean_pairwise.log
+
+# redo clustering
+hotspot3d cluster --pairwise-file=3D_Proximity.pairwise --sites-file=3D_Proximity_cleaned.sites --musites-file 3D_Proximity_cleaned.musites --maf-file=/diskmnt/Projects/Users/dcui/hotPHO/MC3.maf --site-file=/diskmnt/Projects/Users/dcui/hotPHO/Transvar/results/PTMSiteFile.txt --hup-file /diskmnt/Datasets/HotSpot3D_Preprocess/ARDprep201712/hugo.uniprot.pdb.csv --transcript-id-header=Transcript_ID --amino-acid-header=HGVSp_Short --3d-distance-cutoff=10 --vertex-type recurrence 1> cluster_cleaned.out 2> cluster_cleaned.err
